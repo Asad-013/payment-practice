@@ -28,6 +28,7 @@ yarn-error.log*
 
 # Agents
 /.agents
+/.agent
 
 
 # OS Files

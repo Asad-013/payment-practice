@@ -42,6 +42,10 @@ export function useCart() {
     setCart([]);
   }, []);
 
+  const removeFromCart = useCallback((productId: string) => {
+    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+  }, []);
+
   return {
     cart,
     isCartOpen,
@@ -50,6 +54,7 @@ export function useCart() {
     cartTotal,
     addToCart,
     updateQuantity,
+    removeFromCart,
     clearCart,
   };
 }

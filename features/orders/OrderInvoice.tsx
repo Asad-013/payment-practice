@@ -6,7 +6,8 @@ import Link from 'next/link';
 import axios from 'axios';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { CheckCircle, Clock, FileText, Sparkles, Download, CreditCard, AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react';
 
 interface OrderInvoiceProps {
   initialOrder: any;
@@ -93,72 +94,85 @@ export default function OrderInvoice({ initialOrder, initialTransaction }: Order
 
   if (!order) {
     return (
-      <div style={{ textAlign: 'center', padding: '5rem 2rem' }}>
-        <h2>Order Not Found</h2>
-        <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>We couldn't retrieve the details for this order reference.</p>
-        <Link href="/" className="btn" style={{ display: 'inline-block', marginTop: '2rem', textDecoration: 'none' }}>
-          Back to Shop
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center gap-4">
+        <div className="rounded-full bg-white/5 p-4 text-muted-foreground">
+          <FileText className="h-10 w-10" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold">Order Invoice Not Found</h2>
+          <p className="text-sm text-muted-foreground mt-1">We couldn't retrieve the details for this order reference.</p>
+        </div>
+        <Link href="/">
+          <Button size="sm" className="gap-2">
+            <ArrowLeft className="h-4 w-4" /> Back to Shop
+          </Button>
         </Link>
       </div>
     );
   }
 
+  // Calculate Order progress step
+  let progressStep = 1;
+  if (transaction && transaction.status === 'completed') {
+    progressStep = 2;
+  }
+  if (order.status === 'completed') {
+    progressStep = 3;
+  }
+
+  const hasDigital = order.order_items?.some((item: any) => item.products?.is_digital);
+
   return (
-    <>
-      <header>
-        <h1 style={{ cursor: 'pointer' }} onClick={() => window.location.href = '/'}>Premium PayStore</h1>
-        <Link href="/" className="cart-trigger" style={{ textDecoration: 'none' }}>
-          🏠 Shop Storefront
-        </Link>
+    <div className="min-h-screen bg-background text-foreground font-sans pb-24">
+      {/* Navbar */}
+      <header className="sticky top-0 z-40 border-b border-border bg-[#0a0a0c]/85 backdrop-blur-xl transition-all">
+        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold shadow-md shadow-primary/20">
+              P
+            </div>
+            <span className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-indigo-300 via-indigo-500 to-purple-400 bg-clip-text text-transparent">
+              PayStore
+            </span>
+          </Link>
+          <Link href="/">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to Shop
+            </Button>
+          </Link>
+        </div>
       </header>
 
-      <main style={{ maxWidth: '900px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h2 className="section-title" style={{ marginBottom: 0 }}>Order Invoice</h2>
-          <Badge status={order.status} />
+      <main className="max-w-4xl mx-auto px-4 mt-8 space-y-6">
+        {/* Title */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-5">
+          <div>
+            <h2 className="text-2xl font-black text-foreground">Order Invoice</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Order ID: <code className="font-mono text-primary font-bold text-xs">{order.id}</code>
+            </p>
+          </div>
+          <Badge status={order.status} className="w-fit" />
         </div>
 
         {/* Verification Status Alert */}
         {(verifying || verifyError || verifySuccess) && (
           <div
-            style={{
-              background: verifySuccess
-                ? 'rgba(16, 185, 129, 0.12)'
+            className={`rounded-xl border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm font-semibold transition-all ${
+              verifySuccess
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                 : verifying
-                ? 'rgba(99, 102, 241, 0.12)'
-                : 'rgba(239, 68, 68, 0.12)',
-              border: `1px solid ${
-                verifySuccess
-                  ? 'var(--success-accent)'
-                  : verifying
-                  ? 'var(--primary-accent)'
-                  : 'var(--danger-accent)'
-              }`,
-              color: verifySuccess
-                ? 'var(--success-accent)'
-                : verifying
-                ? 'var(--primary-accent)'
-                : 'var(--danger-accent)',
-              padding: '1.25rem',
-              borderRadius: '12px',
-              marginBottom: '2rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontWeight: 500,
-            }}
+                ? 'bg-primary/10 border-primary/20 text-primary'
+                : 'bg-destructive/10 border-destructive/20 text-destructive'
+            }`}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              {verifying && (
-                <span className="spinner" style={{
-                  width: '18px',
-                  height: '18px',
-                  border: '2px solid currentColor',
-                  borderTopColor: 'transparent',
-                  borderRadius: '50%',
-                  display: 'inline-block',
-                  animation: 'spin 0.8s linear infinite',
-                }} />
+            <div className="flex items-center gap-2.5">
+              {verifying ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : verifySuccess ? (
+                <CheckCircle className="h-4 w-4 shrink-0" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 shrink-0" />
               )}
               <span>
                 {verifying
@@ -169,139 +183,217 @@ export default function OrderInvoice({ initialOrder, initialTransaction }: Order
               </span>
             </div>
             {transaction && transaction.status === 'pending' && !verifying && (
-              <Button onClick={handleAutoVerify} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
-                Retry Verification
+              <Button size="sm" onClick={handleAutoVerify} className="h-8 text-xs font-bold shrink-0">
+                Verify Now
               </Button>
             )}
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
-          {/* Instruction Warning Block for Pending bKash Personal Transactions */}
-          {transaction && transaction.status === 'pending' && (
-            <Card style={{
-              background: 'rgba(245, 158, 11, 0.05)',
-              border: '1px solid rgba(245, 158, 11, 0.25)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-            }}>
-              <h4 style={{ color: '#f59e0b', fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                ⚠️ Payment Pending Matching (bKash Personal)
-              </h4>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                Because you paid using a <strong>bKash Personal Number</strong>, you must match your payment to complete the checkout automatically:
-              </p>
-              <ol style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginLeft: '1.25rem', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <li>Check your bKash SMS or app statement to find your <strong>Transaction ID (TrxID)</strong>.</li>
-                <li>Submit that TrxID on the UddoktaPay payment gateway window to confirm.</li>
-                <li>If you already verified it on UddoktaPay, click <strong>"Retry Verification"</strong> at the top.</li>
-                <li>If you closed the checkout window, the merchant will review your payment and approve your order manually in a few minutes.</li>
-              </ol>
-            </Card>
-          )}
-
-          {/* Main Card */}
-          <Card>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-              <div>
-                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Order Details</h4>
-                <p style={{ fontSize: '0.95rem', marginBottom: '0.25rem' }}>ID: <strong style={{ fontFamily: 'monospace' }}>{order.id}</strong></p>
-                <p style={{ fontSize: '0.95rem' }}>Placed on: <strong>{new Date(order.created_at).toLocaleString()}</strong></p>
-              </div>
-              <div>
-                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Payment Status</h4>
-                {transaction ? (
-                  <>
-                    <p style={{ fontSize: '0.95rem', marginBottom: '0.25rem' }}>Ref/Invoice: <strong style={{ fontFamily: 'monospace' }}>{transaction.payment_reference}</strong></p>
-                    <p style={{ fontSize: '0.95rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      Status: <Badge status={transaction.status} />
-                    </p>
-                    {transaction.transaction_id && (
-                      <p style={{ fontSize: '0.95rem', marginTop: '0.25rem' }}>Gateway TxID: <strong style={{ fontFamily: 'monospace', color: 'var(--success-accent)' }}>{transaction.transaction_id}</strong></p>
-                    )}
-                  </>
-                ) : (
-                  <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)' }}>No transaction details linked.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Customer & Shipping Info */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-              <div>
-                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Customer Profile</h4>
-                <p style={{ fontWeight: 600, fontSize: '1.05rem', marginBottom: '0.25rem' }}>{order.customer_name}</p>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>{order.customer_email}</p>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{order.customer_phone}</p>
-              </div>
-              <div>
-                <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Shipping Destination</h4>
-                <p style={{ fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-line' }}>{order.shipping_address}</p>
-              </div>
-            </div>
-
-            {/* Items Table */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h4 style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>Order Catalog Items</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {order.order_items?.map((item: any) => (
-                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                    <div>
-                      <h5 style={{ fontSize: '1rem', fontWeight: 600 }}>{item.products?.name || 'Product'}</h5>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                        ${Number(item.price).toFixed(2)} x {item.quantity}
-                      </p>
-                    </div>
-                    <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>
-                      ${(Number(item.price) * item.quantity).toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Total */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-              <span style={{ fontSize: '1.2rem', fontWeight: 600 }}>Grand Total:</span>
-              <span style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--primary-accent)' }}>
-                ${Number(order.total_amount).toFixed(2)}
-              </span>
-            </div>
-          </Card>
-
-          {/* Verification / Lookup Panel */}
-          <Card>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Verify Another Transaction</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              Did you pay but the status didn't update automatically? Enter your UddoktaPay **Transaction ID** or **Invoice ID** below to verify manually:
-            </p>
-            <form onSubmit={handleManualVerify} className="checkout-form" style={{ marginTop: 0 }}>
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div className="form-group" style={{ flexGrow: 1 }}>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. TXN1002345 or INV-D56C1B"
-                    className="form-control"
-                    value={manualQuery}
-                    onChange={(e) => setManualQuery(e.target.value)}
-                  />
+        {/* Order Status Timeline Progress */}
+        <Card className="border-border/60 bg-white/[0.01]">
+          <CardContent className="p-6">
+            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-6">Delivery Progress</h3>
+            <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-4">
+              {/* Step 1 */}
+              <div className="flex items-center gap-3 md:flex-col md:align-middle md:flex-1 md:text-center">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${progressStep >= 1 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : 'bg-white/5 border border-border text-muted-foreground'}`}>
+                  1
                 </div>
-                <Button type="submit" isLoading={verifying}>
-                  Verify
-                </Button>
+                <div>
+                  <div className="font-semibold text-sm">Order Placed</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">{new Date(order.created_at).toLocaleDateString()}</div>
+                </div>
               </div>
-            </form>
+
+              {/* Connecting Line */}
+              <div className="hidden md:block h-0.5 bg-border flex-1 mx-2" />
+
+              {/* Step 2 */}
+              <div className="flex items-center gap-3 md:flex-col md:align-middle md:flex-1 md:text-center">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${progressStep >= 2 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : 'bg-white/5 border border-border text-muted-foreground'}`}>
+                  2
+                </div>
+                <div>
+                  <div className="font-semibold text-sm">Payment Verified</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                    {transaction?.status === 'completed' ? 'Success' : 'Pending Gateway'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Connecting Line */}
+              <div className="hidden md:block h-0.5 bg-border flex-1 mx-2" />
+
+              {/* Step 3 */}
+              <div className="flex items-center gap-3 md:flex-col md:align-middle md:flex-1 md:text-center">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${progressStep >= 3 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : 'bg-white/5 border border-border text-muted-foreground'}`}>
+                  3
+                </div>
+                <div>
+                  <div className="font-semibold text-sm">{hasDigital ? 'Files Delivered' : 'Item Dispatched'}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                    {order.status === 'completed' || (order.status === 'processing' && hasDigital) ? 'Ready' : 'In Progress'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Digital Files Instant Download delivery Box */}
+        {transaction && transaction.status === 'completed' && hasDigital && (
+          <Card className="border-emerald-500/20 bg-emerald-500/5">
+            <CardContent className="p-6 space-y-4">
+              <h4 className="text-emerald-400 font-bold flex items-center gap-2 text-base">
+                <Sparkles className="h-5 w-5 animate-pulse" /> Instant Digital Delivery
+              </h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Your payment is verified. Click below to download your purchase files instantly:
+              </p>
+              <div className="space-y-3">
+                {order.order_items
+                  .filter((item: any) => item.products?.is_digital)
+                  .map((item: any) => (
+                    <div 
+                      key={item.id} 
+                      className="flex items-center justify-between gap-4 p-3 rounded-xl border border-emerald-500/10 bg-white/[0.01]"
+                    >
+                      <div>
+                        <strong className="text-sm font-semibold text-foreground block">{item.products.name}</strong>
+                        <span className="text-[10px] text-muted-foreground">E-Book / PDF Format</span>
+                      </div>
+                      <a 
+                        href={item.products.download_url || '#'} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold gap-1.5 shadow-md shadow-emerald-500/15"
+                      >
+                        <Download className="h-3.5 w-3.5" /> Download PDF
+                      </a>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
           </Card>
+        )}
+
+        {/* Instruction Block for bKash Personal matching */}
+        {transaction && transaction.status === 'pending' && (
+          <Card className="border-amber-500/25 bg-amber-500/5">
+            <CardContent className="p-6 space-y-3">
+              <h4 className="text-amber-400 font-bold flex items-center gap-1.5 text-sm">
+                <AlertTriangle className="h-4 w-4 shrink-0" /> bKash Personal Invoice Matching Required
+              </h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                If you made the transaction using a **bKash Personal account**, you must enter the **TrxID** inside the payment window or verify manually below:
+              </p>
+              <ol className="text-xs text-muted-foreground list-decimal pl-4 space-y-1">
+                <li>Check your bKash app or SMS statement to retrieve the Transaction ID (TrxID).</li>
+                <li>Ensure the exact amount was sent to the merchant personal number.</li>
+                <li>Submit the TrxID below to instantly complete your order validation.</li>
+              </ol>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Details grid layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Order Details */}
+          <Card className="border-border/60 bg-white/[0.01] md:col-span-2">
+            <CardContent className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4 border-b border-border/40 pb-4">
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Customer Profile</span>
+                  <strong className="text-sm text-foreground block">{order.customer_name}</strong>
+                  <span className="text-xs text-muted-foreground block mt-0.5">{order.customer_email}</span>
+                  <span className="text-xs text-muted-foreground block">{order.customer_phone}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Shipping Destination</span>
+                  <span className="text-xs text-muted-foreground leading-normal whitespace-pre-line">{order.shipping_address}</span>
+                </div>
+              </div>
+
+              {/* Items Table list */}
+              <div className="space-y-3">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-2">Invoice catalog items</span>
+                <div className="divide-y divide-border/40">
+                  {order.order_items?.map((item: any) => (
+                    <div key={item.id} className="flex justify-between items-center py-3 text-xs">
+                      <div>
+                        <strong className="text-foreground block">{item.products?.name || 'Product'}</strong>
+                        <span className="text-muted-foreground mt-0.5 block">${Number(item.price).toFixed(2)} x {item.quantity}</span>
+                      </div>
+                      <span className="font-bold text-foreground">${(Number(item.price) * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Grand Total */}
+              <div className="border-t border-border/40 pt-4 flex justify-between items-center text-sm font-bold">
+                <span>Grand Total:</span>
+                <span className="text-primary text-lg">${Number(order.total_amount).toFixed(2)}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sidebar actions / verification match */}
+          <div className="space-y-6">
+            <Card className="border-border/60 bg-white/[0.01]">
+              <CardContent className="p-6 space-y-4">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Transaction Log</span>
+                {transaction ? (
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Invoice Ref:</span>
+                      <code className="font-mono font-bold">{transaction.payment_reference}</code>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Gateway Status:</span>
+                      <Badge status={transaction.status} className="text-[9px]" />
+                    </div>
+                    {transaction.transaction_id && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gateway ID:</span>
+                        <code className="font-mono text-emerald-400">{transaction.transaction_id}</code>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Updated:</span>
+                      <span>{new Date(transaction.updated_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No payment transaction records linked.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {transaction && transaction.status === 'pending' && (
+              <Card className="border-border/60 bg-white/[0.01]">
+                <CardContent className="p-6 space-y-4">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Manual Match</span>
+                  <form onSubmit={handleManualVerify} className="space-y-3">
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. TXN1002345"
+                      className="flex h-9 w-full rounded-lg border border-border bg-white/[0.02] px-3.5 py-2 text-xs placeholder:text-muted-foreground/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all"
+                      value={manualQuery}
+                      onChange={(e) => setManualQuery(e.target.value)}
+                    />
+                    <Button type="submit" isLoading={verifying} className="w-full text-xs h-9">
+                      Match Invoice
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </main>
-
-      <style jsx global>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </>
+    </div>
   );
 }

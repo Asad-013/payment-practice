@@ -62,6 +62,8 @@ export async function createProduct(data: {
   stock: number;
   image_url?: string;
   is_active: boolean;
+  is_digital: boolean;
+  download_url?: string;
 }) {
   try {
     await verifyAdminAuth();
@@ -77,6 +79,8 @@ export async function createProduct(data: {
       stock: data.stock,
       image_url: data.image_url,
       is_active: data.is_active,
+      is_digital: data.is_digital,
+      download_url: data.download_url,
     });
 
     revalidatePath('/');
@@ -100,6 +104,8 @@ export async function updateProduct(
     stock: number;
     image_url: string;
     is_active: boolean;
+    is_digital: boolean;
+    download_url: string;
   }>
 ) {
   try {

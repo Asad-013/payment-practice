@@ -1,29 +1,38 @@
-// components/ui/Input.tsx
-import React from 'react';
+import * as React from "react"
+import { cn } from "@/lib/utils"
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
 }
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className = '', ...props }, ref) => {
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, label, error, ...props }, ref) => {
     return (
-      <div className="form-group" style={{ marginBottom: '1rem' }}>
-        {label && <label style={{ marginBottom: '0.35rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{label}</label>}
+      <div className="w-full flex flex-col gap-1.5">
+        {label && (
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider select-none">
+            {label}
+          </label>
+        )}
         <input
+          type={type}
+          className={cn(
+            "flex h-10 w-full rounded-lg border border-border bg-white/[0.03] px-3.5 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 transition-all",
+            error && "border-destructive focus-visible:ring-destructive",
+            className
+          )}
           ref={ref}
-          className={`form-control ${error ? 'is-invalid' : ''} ${className}`}
           {...props}
         />
         {error && (
-          <span style={{ color: 'var(--danger-accent)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
-            {error}
-          </span>
+          <p className="text-xs font-medium text-destructive">{error}</p>
         )}
       </div>
-    );
+    )
   }
-);
+)
+Input.displayName = "Input"
 
-Input.displayName = 'Input';
+export { Input }

@@ -15,6 +15,8 @@ export interface Product {
   stock: number;
   image_url?: string;
   is_active: boolean;
+  is_digital: boolean;
+  download_url?: string;
   created_at: string;
   updated_at: string;
 }

@@ -107,7 +107,12 @@ export async function POST(request: Request) {
     const paymentReference = `INV-${uuidv4().substring(0, 8).toUpperCase()}`;
 
     // 6. Request payment session from UddoktaPay first to obtain gateway ID
-    const baseUrl = CONFIG.APP_URL;
+    const requestUrl = new URL(request.url);
+    const forwardedHost = request.headers.get('x-forwarded-host');
+    const forwardedProto = request.headers.get('x-forwarded-proto') || 'http';
+    const baseUrl = forwardedHost 
+      ? `${forwardedProto}://${forwardedHost}` 
+      : `${requestUrl.protocol}//${requestUrl.host}`;
     let redirectUrl = '';
     try {
       redirectUrl = await UddoktaPayClient.initPayment({
